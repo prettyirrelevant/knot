@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": ".tmp-tests",
+    "noEmit": false,
+    "incremental": false
+  },
+  "include": ["lib/engine/**/*.ts", "lib/types/**/*.ts"],
+  "exclude": ["node_modules", ".next"]
+}

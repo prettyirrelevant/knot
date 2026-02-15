@@ -1,0 +1,33 @@
+{
+  "name": "knot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "rm -rf .tmp-tests && tsc -p tsconfig.test.json && node --test .tmp-tests/engine/index.test.js",
+    "convex:dev": "convex dev"
+  },
+  "dependencies": {
+    "@simplewebauthn/browser": "^13.2.0",
+    "@simplewebauthn/server": "^13.2.0",
+    "convex": "^1.21.0",
+    "lucide-react": "^0.564.0",
+    "next": "^15.3.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-select": "^5.10.2",
+    "sonner": "^2.0.7",
+    "unique-names-generator": "^4.7.1",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "typescript": "^5.8.3"
+  }
+}
