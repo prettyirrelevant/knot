@@ -605,6 +605,11 @@ details.info-group:not([open]) > summary.info-group-title {
 }
 
 .knot-cell {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
   aspect-ratio: 1 / 1;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -638,6 +643,8 @@ details.info-group:not([open]) > summary.info-group-title {
 
 .knot-cell:disabled {
   cursor: default;
+  color: inherit;
+  opacity: 1;
 }
 
 .knot-cell.is-winning {
