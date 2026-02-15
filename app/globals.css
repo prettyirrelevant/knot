@@ -678,6 +678,8 @@ details.info-group:not([open]) > summary.info-group-title {
   margin-top: 1rem;
   display: grid;
   gap: 0.7rem;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .leaderboard-row {

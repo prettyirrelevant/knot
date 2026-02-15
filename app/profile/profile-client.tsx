@@ -141,6 +141,7 @@ function OpponentSearch({
 export function ProfileClient() {
   const [opponentId, setOpponentId] = useState("");
   const [editingName, setEditingName] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const storePlayerId = useIdentityStore((s) => s.playerId);
@@ -189,6 +190,7 @@ export function ProfileClient() {
   const displayName = player?.displayName ?? "...";
 
   async function saveName() {
+    setIsEditing(false);
     const trimmed = editingName.trim();
     if (!trimmed || trimmed === displayName || !playerIdRef) return;
     try {
@@ -211,6 +213,7 @@ export function ProfileClient() {
       inputRef.current?.blur();
     }
     if (e.key === "Escape") {
+      setIsEditing(false);
       setEditingName(displayName);
       inputRef.current?.blur();
     }
@@ -224,10 +227,10 @@ export function ProfileClient() {
         <input
           ref={inputRef}
           className="profile-name-input display"
-          value={editingName || displayName}
+          value={isEditing ? editingName : displayName}
           maxLength={30}
           onChange={(e) => setEditingName(e.target.value)}
-          onFocus={() => setEditingName(editingName || displayName)}
+          onFocus={() => { setIsEditing(true); setEditingName(displayName); }}
           onBlur={() => saveName()}
           onKeyDown={handleKeyDown}
         />
