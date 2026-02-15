@@ -19,15 +19,12 @@ function base64UrlDecode(value: string) {
 
 function getSessionSecret() {
   const envSecret = process.env.KNOT_SESSION_SECRET;
-  if (envSecret && envSecret.length >= 32) {
-    return envSecret;
+  if (!envSecret || envSecret.length < 32) {
+    throw new Error(
+      "KNOT_SESSION_SECRET env var is missing or too short (min 32 chars).",
+    );
   }
-
-  if (process.env.NODE_ENV !== "production") {
-    return "knot-dev-only-secret-change-this-before-production";
-  }
-
-  throw new Error("KNOT_SESSION_SECRET must be set in production.");
+  return envSecret;
 }
 
 function signPayload(payloadB64: string) {
