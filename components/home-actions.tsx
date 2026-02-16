@@ -16,7 +16,7 @@ export function HomeActions() {
         type="button"
         onClick={() => setModalOpen(true)}
       >
-        Create New Room
+        Create Game
       </button>
       {modalOpen ? <CreateRoomModal open onClose={() => setModalOpen(false)} /> : null}
 
@@ -24,8 +24,8 @@ export function HomeActions() {
         <input
           value={roomCode}
           onChange={(event) => setRoomCode(event.target.value.toUpperCase())}
-          placeholder="ROOM CODE"
-          aria-label="Join room code"
+          placeholder="GAME CODE"
+          aria-label="Game code"
         />
         <button
           className="button"

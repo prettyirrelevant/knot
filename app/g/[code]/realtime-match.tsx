@@ -122,11 +122,11 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
     }
 
     if (match.players?.O) {
-      setFeedback("Room's full. You're watching this one.");
+      setFeedback("Game's full. You're watching this one.");
       return;
     }
 
-    setFeedback("Room's open. Jump in.");
+    setFeedback("Game's open. Jump in.");
   }, [match, playerId, playerSymbol]);
 
   const winningLineSet = useMemo(
@@ -143,9 +143,9 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
     setJoining(true);
     try {
       await joinRoom({ roomCode, playerId });
-      toast.success("Joined room.");
+      toast.success("Joined game.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to join room.");
+      toast.error(error instanceof Error ? error.message : "Unable to join game.");
     } finally {
       setJoining(false);
     }
@@ -229,7 +229,7 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
     return (
       <div>
         <p className="feedback-line">
-          No room with code <strong>{roomCode}</strong>. Check the code or create a new one.
+          No game with code <strong>{roomCode}</strong>. Check the code or create a new one.
         </p>
         <div className="rule-actions" style={{ marginTop: "0.75rem" }}>
           <Link className="button primary" href="/">

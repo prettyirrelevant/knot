@@ -28,7 +28,7 @@ function normalizeRoomCode(roomCode?: string) {
 
   const normalized = roomCode.trim().toUpperCase();
   if (!/^[A-Z0-9-]{3,20}$/.test(normalized)) {
-    throw new Error("Room code must be 3-20 chars using A-Z, 0-9, or -.");
+    throw new Error("Game code must be 3-20 chars using A-Z, 0-9, or -.");
   }
 
   return normalized;
@@ -228,6 +228,9 @@ async function finalizeCompetitiveResult(
     updatedAt: now,
   });
 
+  const xResult = outcome.status === "draw" ? "draw" : outcome.winner === "X" ? "win" : "loss";
+  const oResult = outcome.status === "draw" ? "draw" : outcome.winner === "O" ? "win" : "loss";
+
   await ctx.db.insert("ratingEvents", {
     matchId: match._id,
     roundNumber,
@@ -235,6 +238,7 @@ async function finalizeCompetitiveResult(
     beforeElo: Number(xRating.elo),
     afterElo: nextXElo,
     delta: deltaX,
+    result: xResult,
     createdAt: now,
   });
 
@@ -245,6 +249,7 @@ async function finalizeCompetitiveResult(
     beforeElo: Number(oRating.elo),
     afterElo: nextOElo,
     delta: deltaO,
+    result: oResult,
     createdAt: now,
   });
 
@@ -298,7 +303,7 @@ export const createRoom = mutation({
       }
 
       if (requested) {
-        throw new Error("Room code already exists.");
+        throw new Error("Game code already exists.");
       }
 
       roomCode = createRoomCode();
@@ -333,7 +338,7 @@ export const joinRoom = mutation({
   handler: async (ctx, args) => {
     const roomCode = normalizeRoomCode(args.roomCode);
     if (!roomCode) {
-      throw new Error("Invalid room code.");
+      throw new Error("Invalid game code.");
     }
 
     const match = await ctx.db
@@ -342,7 +347,7 @@ export const joinRoom = mutation({
       .first();
 
     if (!match) {
-      throw new Error("Room not found.");
+      throw new Error("Game not found.");
     }
 
     if (match.players.X === args.playerId || match.players.O === args.playerId) {
@@ -353,7 +358,7 @@ export const joinRoom = mutation({
     }
 
     if (match.players.O) {
-      throw new Error("Room is already full.");
+      throw new Error("Game is already full.");
     }
 
     const now = Date.now();

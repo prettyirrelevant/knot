@@ -18,7 +18,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
     <main className="page-shell">
       <section className="glass-panel match-shell">
         <p className="kicker">Live Match</p>
-        <h1 className="display">Game Room</h1>
+        <h1 className="display">Live Game</h1>
         <RealtimeMatch roomCode={code} />
       </section>
     </main>

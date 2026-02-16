@@ -7,7 +7,7 @@ export default function HomePage() {
         <article className="glass-panel hero-copy">
           <p className="kicker">1v1 strategy</p>
           <h1 className="display">Knot</h1>
-          <p>Create a room, share the code, and play in real time.</p>
+          <p>Create a game, share the code, and play in real time.</p>
           <HomeActions />
         </article>
       </section>
@@ -17,7 +17,7 @@ export default function HomePage() {
           <p className="kicker">Flexible</p>
           <h2>Your rules, your board.</h2>
           <p>
-            Pick a board size, set the win condition, choose your symbols. Every room
+            Pick a board size, set the win condition, choose your symbols. Every game
             plays by the rules you decide.
           </p>
         </article>
@@ -33,7 +33,7 @@ export default function HomePage() {
           <p className="kicker">Competitive</p>
           <h2>Climb the ladder.</h2>
           <p>
-            Every match updates your ranking. Track your record against any rival to
+            Every game updates your ranking. Track your record against any rival to
             see who really has the edge.
           </p>
         </article>

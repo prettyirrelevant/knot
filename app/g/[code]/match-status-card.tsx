@@ -29,7 +29,7 @@ export function MatchStatusCard({
       title = "Waiting for opponent";
       desc = "Share the link to invite someone.";
     } else {
-      title = "Room open";
+      title = "Game open";
       desc = "Join to start the match.";
     }
   } else if (isTerminal) {

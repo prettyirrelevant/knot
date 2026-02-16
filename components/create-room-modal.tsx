@@ -214,7 +214,7 @@ export function CreateRoomModal({ open, onClose }: { open: boolean; onClose: () 
             onClick={() => void handleCreate()}
             disabled={creating}
           >
-            {creating ? <><Loader2 size={16} className="spinner" /> Setting up...</> : "Create room"}
+            {creating ? <><Loader2 size={16} className="spinner" /> Setting up...</> : "Create game"}
           </button>
           {error ? <p className="create-modal-error">{error}</p> : null}
         </div>

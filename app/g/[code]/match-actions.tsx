@@ -81,7 +81,7 @@ export function MatchActions({
 
       {isArchived && isTerminal && !canRequestRematch && !canAcceptRematch && !waitingForRematch && (
         <div className="rule-actions">
-          <p className="feedback-line">This match has been archived.</p>
+          <p className="feedback-line">This game has been archived.</p>
           <Link className="button" href="/">Go Home</Link>
         </div>
       )}

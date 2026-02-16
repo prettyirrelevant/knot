@@ -88,6 +88,7 @@ export default defineSchema({
     beforeElo: v.number(),
     afterElo: v.number(),
     delta: v.number(),
+    result: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_matchId", ["matchId"])

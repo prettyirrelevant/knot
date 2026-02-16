@@ -40,7 +40,7 @@ export function MatchShareStrip({
           className="share-code-btn"
           type="button"
           onClick={() => void handleCopyLink()}
-          aria-label="Copy room link"
+          aria-label="Copy game link"
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
         </button>
