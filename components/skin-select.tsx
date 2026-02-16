@@ -94,7 +94,7 @@ export function SkinSelect({
       }}
       styles={skinSelectStyles}
       isSearchable={false}
-      menuPlacement="auto"
+      menuPlacement="bottom"
     />
   );
 }

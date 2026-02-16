@@ -51,19 +51,19 @@ export const GAME_PRESETS: readonly GamePreset[] = [
   {
     id: "classic-3",
     label: "Classic",
-    description: "3x3 board, first to 3.",
+    description: "Quick and sharp. No room to hide.",
     config: { size: 3, winLength: 3, turnTimeSec: 30, presetId: "classic-3" },
   },
   {
     id: "arena-5",
     label: "Arena",
-    description: "5x5 board, first to 4.",
+    description: "More space. More schemes.",
     config: { size: 5, winLength: 4, turnTimeSec: 30, presetId: "arena-5" },
   },
   {
     id: "marathon-10",
     label: "Marathon",
-    description: "10x10 board, first to 5.",
+    description: "Settle in. This one's a war.",
     config: { size: 10, winLength: 5, turnTimeSec: 45, presetId: "marathon-10" },
   },
 ] as const;
