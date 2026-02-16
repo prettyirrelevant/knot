@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as history from "../history.js";
 import type * as matches from "../matches.js";
 import type * as passkeys from "../passkeys.js";
 import type * as players from "../players.js";
@@ -20,6 +21,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  history: typeof history;
   matches: typeof matches;
   passkeys: typeof passkeys;
   players: typeof players;

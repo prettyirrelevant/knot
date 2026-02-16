@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "./convex-client-provider";
 import { IdentityProvider } from "./identity-provider";
@@ -39,36 +40,38 @@ export default function RootLayout({
 }>) {
   const hasConvexUrl = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
       <body>
-        <ConvexClientProvider>
-          {hasConvexUrl ? (
-            <IdentityProvider>
-              <NavBar />
-              {children}
-              <Footer />
-            </IdentityProvider>
-          ) : (
-            <>
-              <NavBar />
-              {children}
-              <Footer />
-            </>
-          )}
-        </ConvexClientProvider>
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: "var(--paper-bright)",
-              border: "1px solid var(--line)",
-              color: "var(--ink-900)",
-              fontFamily: "var(--font-body-stack)",
-              borderRadius: "var(--radius-md)",
-              boxShadow: "var(--shadow-sm)",
-            },
-          }}
-        />
+        <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ConvexClientProvider>
+            {hasConvexUrl ? (
+              <IdentityProvider>
+                <NavBar />
+                {children}
+                <Footer />
+              </IdentityProvider>
+            ) : (
+              <>
+                <NavBar />
+                {children}
+                <Footer />
+              </>
+            )}
+          </ConvexClientProvider>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: "var(--paper-bright)",
+                border: "1px solid var(--line)",
+                color: "var(--ink-900)",
+                fontFamily: "var(--font-body-stack)",
+                borderRadius: "var(--radius-md)",
+                boxShadow: "var(--shadow-sm)",
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );

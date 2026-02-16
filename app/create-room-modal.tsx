@@ -51,7 +51,7 @@ function SkinOptionComponent(props: OptionProps<SkinOption, false>) {
         background: isSelected
           ? "var(--accent-soft)"
           : isFocused
-            ? "rgba(21, 21, 21, 0.04)"
+            ? "var(--surface-solid)"
             : "transparent",
         color: "var(--ink-900)",
       }}
@@ -84,14 +84,14 @@ const skinSelectStyles: StylesConfig<SkinOption, false> = {
     ...base,
     border: `1px solid ${state.isFocused ? "var(--accent)" : "var(--line)"}`,
     borderRadius: "12px",
-    background: "rgba(255, 255, 255, 0.75)",
+    background: "var(--surface-solid)",
     boxShadow: state.isFocused ? "0 0 0 3px var(--accent-soft)" : "none",
     cursor: "pointer",
     minHeight: "unset",
     padding: "0.1rem 0",
     fontSize: "0.88rem",
     fontFamily: "inherit",
-    "&:hover": { borderColor: "rgba(21, 21, 21, 0.28)" },
+    "&:hover": { borderColor: "var(--border-strong)" },
   }),
   menu: (base) => ({
     ...base,
@@ -231,6 +231,7 @@ export function CreateRoomModal({ open, onClose }: { open: boolean; onClose: () 
           </button>
         </div>
 
+        <p className="kicker">Popular configs</p>
         <div className="preset-grid">
           {GAME_PRESETS.map((preset) => (
             <button

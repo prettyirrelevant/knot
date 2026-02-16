@@ -1,6 +1,8 @@
 import { queryGeneric as query } from "convex/server";
 import { v } from "convex/values";
 
+type SymbolToken = "X" | "O";
+
 export const getLeaderboard = query({
   args: {
     limit: v.optional(v.number()),
@@ -43,6 +45,92 @@ export const getHeadToHead = query({
       .withIndex("by_pair", (q) => q.eq("playerLowId", low))
       .filter((q) => q.eq(q.field("playerHighId"), high))
       .first();
+  },
+});
+
+export const getHeadToHeadDetails = query({
+  args: {
+    playerAId: v.id("players"),
+    playerBId: v.id("players"),
+  },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("ratingEvents")
+      .withIndex("by_playerId", (q: any) => q.eq("playerId", args.playerAId))
+      .collect();
+
+    const seenMatchIds = new Set<string>();
+    const uniqueMatchIds: string[] = [];
+    for (const event of events) {
+      const key = String(event.matchId);
+      if (!seenMatchIds.has(key)) {
+        seenMatchIds.add(key);
+        uniqueMatchIds.push(key);
+      }
+    }
+
+    const terminalStatuses = new Set(["won", "draw", "timeout", "resigned"]);
+    const playerBStr = String(args.playerBId);
+
+    const bySize: Record<number, { wins: number; losses: number; draws: number }> = {};
+    let totalMatches = 0;
+    let currentStreak = 0;
+    let bestStreak = 0;
+    let lastPlayedAt: number | null = null;
+    const results: Array<{ won: boolean; drew: boolean; timestamp: number }> = [];
+
+    for (const matchIdStr of uniqueMatchIds) {
+      const match = await ctx.db.get(matchIdStr as any);
+      if (!match) continue;
+      if (!terminalStatuses.has(match.status)) continue;
+
+      const xStr = match.players?.X ? String(match.players.X) : null;
+      const oStr = match.players?.O ? String(match.players.O) : null;
+      if (xStr !== playerBStr && oStr !== playerBStr) continue;
+
+      totalMatches++;
+      const size = match.config?.size ?? 3;
+      if (!bySize[size]) bySize[size] = { wins: 0, losses: 0, draws: 0 };
+
+      const playerASymbol: SymbolToken | null =
+        xStr === String(args.playerAId) ? "X" : oStr === String(args.playerAId) ? "O" : null;
+      if (!playerASymbol) continue;
+
+      const isDraw = match.status === "draw";
+      const playerAWon = !isDraw && match.winner === playerASymbol;
+      const playerALost = !isDraw && !playerAWon;
+
+      if (isDraw) bySize[size].draws++;
+      else if (playerAWon) bySize[size].wins++;
+      else if (playerALost) bySize[size].losses++;
+
+      const timestamp = match.updatedAt ?? match.createdAt ?? 0;
+      if (lastPlayedAt === null || timestamp > lastPlayedAt) lastPlayedAt = timestamp;
+
+      results.push({ won: playerAWon, drew: isDraw, timestamp });
+    }
+
+    results.sort((a, b) => b.timestamp - a.timestamp);
+    for (const r of results) {
+      if (r.won) currentStreak++;
+      else break;
+    }
+
+    let streak = 0;
+    for (const r of results) {
+      if (r.won) { streak++; bestStreak = Math.max(bestStreak, streak); }
+      else streak = 0;
+    }
+
+    return {
+      totalMatches,
+      bySize: Object.entries(bySize)
+        .map(([size, stats]) => ({ size: Number(size), ...stats }))
+        .sort((a, b) => a.size - b.size),
+      currentStreak,
+      bestStreak,
+      lastPlayedAt,
+    };
   },
 });
 

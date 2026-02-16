@@ -44,6 +44,7 @@ export default defineSchema({
     winner: v.optional(v.union(v.literal("X"), v.literal("O"))),
     winningLine: v.optional(v.array(v.number())),
     lastMoveIndex: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
