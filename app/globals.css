@@ -728,8 +728,8 @@ details.info-group:not([open]) > summary.info-group-title {
 }
 
 .knot-cell.is-last-move {
-  border-color: rgba(21, 21, 21, 0.45);
-  background: rgba(21, 21, 21, 0.06);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
 }
 
 .feedback-line {

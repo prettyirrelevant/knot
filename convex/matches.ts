@@ -670,7 +670,7 @@ export const acceptRematch = mutation({
 
     await ctx.db.patch(match._id, {
       board: createEmptyBoard(match.config.size),
-      nextPlayer: "X",
+      nextPlayer: nextRound % 2 === 1 ? "X" : "O",
       status: "active",
       winner: undefined,
       winningLine: undefined,

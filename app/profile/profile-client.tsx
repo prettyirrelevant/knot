@@ -65,7 +65,7 @@ const opponentSelectStyles: StylesConfig<OpponentOption, false> = {
     cursor: "text",
     minHeight: "unset",
     padding: "0.1rem 0.4rem",
-    fontSize: "0.88rem",
+    fontSize: "1rem",
     fontFamily: "inherit",
     "&:hover": { borderColor: "var(--border-strong)" },
   }),
