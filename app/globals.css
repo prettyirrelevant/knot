@@ -1773,5 +1773,10 @@ details.info-group:not([open]) > summary.info-group-title {
   .history-summary {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .leaderboard-list,
+  .history-list {
+    max-height: calc(70vh - 5rem);
+  }
 }
 
