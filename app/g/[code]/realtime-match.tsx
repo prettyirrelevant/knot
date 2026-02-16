@@ -458,13 +458,14 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
           <div className="knot-board" style={{ gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))` }}>
             {board.map((cell, index) => {
               const isWinningCell = winningLineSet.has(index);
+              const isLastMove = !isTerminal && index === match.lastMoveIndex;
               const isDisabled = !canPlay || cell !== null || match.nextPlayer !== playerSymbol;
 
               return (
                 <button
                   key={`cell-${index}`}
                   type="button"
-                  className={`knot-cell${isWinningCell ? " is-winning" : ""}`}
+                  className={`knot-cell${isWinningCell ? " is-winning" : isLastMove ? " is-last-move" : ""}`}
                   onClick={() => void handleMove(index)}
                   disabled={isDisabled}
                   aria-label={`Cell ${index + 1}`}

@@ -652,6 +652,11 @@ details.info-group:not([open]) > summary.info-group-title {
   background: rgba(206, 90, 47, 0.12);
 }
 
+.knot-cell.is-last-move {
+  border-color: rgba(21, 21, 21, 0.45);
+  background: rgba(21, 21, 21, 0.06);
+}
+
 .feedback-line {
   margin: 0;
   padding: 0.65rem 0.75rem;
