@@ -34,7 +34,9 @@ export function LeaderboardClient() {
       {entries.map((entry, index) => (
         <article
           key={String(entry._id)}
-          className={`leaderboard-row glass-panel${index < 3 ? " podium" : ""}`}
+          className={`leaderboard-row${
+            index === 0 ? " rank-1" : index === 1 ? " rank-2" : index === 2 ? " rank-3" : ""
+          }`}
         >
           <span className="leaderboard-rank">{index + 1}</span>
           <span className="leaderboard-name">{entry.playerDisplayName}</span>

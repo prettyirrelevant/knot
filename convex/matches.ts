@@ -560,6 +560,10 @@ export const requestRematch = mutation({
       throw new Error("Match not found.");
     }
 
+    if (match.deletedAt) {
+      return { ok: false as const, reason: "MATCH_ARCHIVED" };
+    }
+
     if (!isTerminal(match.status)) {
       return {
         ok: false as const,
@@ -615,6 +619,10 @@ export const acceptRematch = mutation({
     const match = await ctx.db.get(args.matchId);
     if (!match) {
       throw new Error("Match not found.");
+    }
+
+    if (match.deletedAt) {
+      return { ok: false as const, reason: "MATCH_ARCHIVED" };
     }
 
     if (!isTerminal(match.status)) {

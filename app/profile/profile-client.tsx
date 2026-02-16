@@ -15,6 +15,7 @@ const GET_PLAYER = api.players.getPlayerById;
 const GET_RATING = api.ratings.getPlayerRating;
 const LIST_PLAYERS = api.players.listPlayers;
 const GET_H2H = api.ratings.getHeadToHead;
+const GET_H2H_DETAILS = api.ratings.getHeadToHeadDetails;
 const UPDATE_NAME = api.players.updateDisplayName;
 
 function formatDate(timestamp: number) {
@@ -23,6 +24,15 @@ function formatDate(timestamp: number) {
     year: "numeric",
   });
 }
+
+function formatDateFull(timestamp: number) {
+  return new Date(timestamp).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 
 function SkeletonBooting() {
   return (
@@ -50,14 +60,14 @@ const opponentSelectStyles: StylesConfig<OpponentOption, false> = {
     ...base,
     border: `1px solid ${state.isFocused ? "var(--accent)" : "var(--line)"}`,
     borderRadius: "999px",
-    background: "rgba(255, 255, 255, 0.86)",
+    background: "var(--surface-input)",
     boxShadow: state.isFocused ? "0 0 0 3px var(--accent-soft)" : "none",
     cursor: "text",
     minHeight: "unset",
     padding: "0.1rem 0.4rem",
     fontSize: "0.88rem",
     fontFamily: "inherit",
-    "&:hover": { borderColor: "rgba(21, 21, 21, 0.28)" },
+    "&:hover": { borderColor: "var(--border-strong)" },
   }),
   menu: (base) => ({
     ...base,
@@ -80,7 +90,7 @@ const opponentSelectStyles: StylesConfig<OpponentOption, false> = {
     background: state.isSelected
       ? "var(--accent-soft)"
       : state.isFocused
-        ? "rgba(21, 21, 21, 0.04)"
+        ? "var(--surface-solid)"
         : "transparent",
     color: "var(--ink-900)",
     fontWeight: state.isSelected ? 600 : 400,
@@ -159,6 +169,13 @@ export function ProfileClient() {
 
   const h2h = useQuery(
     GET_H2H,
+    shouldLoadH2h && playerIdRef && opponentIdRef
+      ? { playerAId: playerIdRef, playerBId: opponentIdRef }
+      : "skip",
+  );
+
+  const h2hDetails = useQuery(
+    GET_H2H_DETAILS,
     shouldLoadH2h && playerIdRef && opponentIdRef
       ? { playerAId: playerIdRef, playerBId: opponentIdRef }
       : "skip",
@@ -283,25 +300,78 @@ export function ProfileClient() {
               const total = yourWins + theirWins + draws;
 
               return (
-                <div className="h2h-card">
-                  <div className="h2h-names">
-                    <span>You</span>
-                    <span>{opponentName}</span>
-                  </div>
-                  <div className="h2h-score">
-                    <span>{yourWins}</span>
-                    <span className="h2h-score-dash">&mdash;</span>
-                    <span>{theirWins}</span>
-                  </div>
-                  {total > 0 && (
-                    <div className="h2h-bar">
-                      {yourWins > 0 && <div className="h2h-bar-you" style={{ flex: yourWins }} />}
-                      {draws > 0 && <div className="h2h-bar-draw" style={{ flex: draws }} />}
-                      {theirWins > 0 && <div className="h2h-bar-them" style={{ flex: theirWins }} />}
+                <>
+                  <div className="h2h-card">
+                    <div className="h2h-names">
+                      <span>You</span>
+                      <span>{opponentName}</span>
                     </div>
+                    <div className="h2h-score">
+                      <span>{yourWins}</span>
+                      <span className="h2h-score-dash">&mdash;</span>
+                      <span>{theirWins}</span>
+                    </div>
+                    {total > 0 && (
+                      <div className="h2h-bar">
+                        {yourWins > 0 && <div className="h2h-bar-you" style={{ flex: yourWins }} />}
+                        {draws > 0 && <div className="h2h-bar-draw" style={{ flex: draws }} />}
+                        {theirWins > 0 && <div className="h2h-bar-them" style={{ flex: theirWins }} />}
+                      </div>
+                    )}
+                    <p className="h2h-summary">
+                      {total} played
+                      {draws > 0 && ` · ${draws} draw${draws !== 1 ? "s" : ""}`}
+                      {h2hDetails?.lastPlayedAt && ` · played ${formatDateFull(h2hDetails.lastPlayedAt)}`}
+                    </p>
+                  </div>
+                  {h2hDetails && (
+                    <>
+                      {(h2hDetails.currentStreak > 0 || h2hDetails.bestStreak > 0) && (
+                        <div className="h2h-meta-row">
+                          {h2hDetails.currentStreak > 0 && (
+                            <div className="h2h-meta-stat">
+                              <div className="h2h-meta-value">{h2hDetails.currentStreak}</div>
+                              <div className="h2h-meta-label">Current Streak</div>
+                            </div>
+                          )}
+                          {h2hDetails.bestStreak > 0 && (
+                            <div className="h2h-meta-stat">
+                              <div className="h2h-meta-value">{h2hDetails.bestStreak}</div>
+                              <div className="h2h-meta-label">Best Streak</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {h2hDetails.bySize.length > 0 && (
+                        <details className="h2h-detail">
+                          <summary className="h2h-detail-toggle">By board size</summary>
+                          <div className="h2h-size-list">
+                            <div className="h2h-size-list-header">
+                              <span>Size</span>
+                              <span>W</span>
+                              <span>L</span>
+                              <span>D</span>
+                              <span>Win %</span>
+                            </div>
+                            {h2hDetails.bySize.map((row) => {
+                              const sizeTotal = row.wins + row.losses + row.draws;
+                              const sizeWinRate = sizeTotal > 0 ? Math.round((row.wins / sizeTotal) * 100) : 0;
+                              return (
+                                <div key={row.size} className="h2h-size-list-row">
+                                  <span className="h2h-size-list-label">{row.size}x{row.size}</span>
+                                  <span className="h2h-size-list-val win">{row.wins}</span>
+                                  <span className="h2h-size-list-val loss">{row.losses}</span>
+                                  <span className="h2h-size-list-val draw">{row.draws}</span>
+                                  <span className="h2h-size-list-rate">{sizeWinRate}%</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </details>
+                      )}
+                    </>
                   )}
-                  <p className="h2h-summary">{total} played{draws > 0 ? ` · ${draws} draw${draws !== 1 ? "s" : ""}` : ""}</p>
-                </div>
+                </>
               );
             })()
           ) : (

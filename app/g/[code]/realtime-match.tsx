@@ -348,6 +348,7 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
   const roundNumber = Number(match.roundNumber ?? 1);
   const status = String(match.status);
   const isTerminal = isTerminalStatus(status);
+  const isArchived = Boolean(match.deletedAt);
 
   const didWin = Boolean(match.winner) && playerSymbol === match.winner;
   const isMyTurn = status === "active" && match.nextPlayer === playerSymbol;
@@ -355,9 +356,9 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
   const requestedBy = (match.rematchRequestedBy as "X" | "O" | undefined) ?? undefined;
   const canJoin = !playerSymbol && !match.players?.O;
   const canPlay = Boolean(playerSymbol) && status === "active";
-  const canRequestRematch = Boolean(playerSymbol) && isTerminal && !requestedBy;
-  const canAcceptRematch = Boolean(playerSymbol) && isTerminal && requestedBy && requestedBy !== playerSymbol;
-  const waitingForRematch = Boolean(playerSymbol) && isTerminal && requestedBy === playerSymbol;
+  const canRequestRematch = Boolean(playerSymbol) && isTerminal && !requestedBy && !isArchived;
+  const canAcceptRematch = Boolean(playerSymbol) && isTerminal && requestedBy && requestedBy !== playerSymbol && !isArchived;
+  const waitingForRematch = Boolean(playerSymbol) && isTerminal && requestedBy === playerSymbol && !isArchived;
 
   const myDelta = typeof roundRating?.myDelta === "number" ? roundRating.myDelta : undefined;
   const myAfterElo = roundRating?.events.find(
@@ -530,6 +531,13 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
           {waitingForRematch && (
             <div className="rule-actions">
               <p className="feedback-line">Waiting for opponent to accept...</p>
+              <Link className="button" href="/">Go Home</Link>
+            </div>
+          )}
+
+          {isArchived && isTerminal && !canRequestRematch && !canAcceptRematch && !waitingForRematch && (
+            <div className="rule-actions">
+              <p className="feedback-line">This match has been archived.</p>
               <Link className="button" href="/">Go Home</Link>
             </div>
           )}
