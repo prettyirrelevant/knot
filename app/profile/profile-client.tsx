@@ -76,7 +76,7 @@ const opponentSelectStyles: StylesConfig<OpponentOption, false> = {
     boxShadow: "var(--shadow-sm)",
     overflow: "hidden",
     background: "var(--paper-bright)",
-    zIndex: 10,
+    zIndex: 110,
   }),
   menuList: (base) => ({
     ...base,
