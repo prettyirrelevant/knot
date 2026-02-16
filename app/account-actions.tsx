@@ -9,7 +9,6 @@ import { writeIdentityCache } from "@/lib/auth/identity-cache";
 import { useIdentityStore } from "@/stores/use-identity-store";
 
 export function AccountActions() {
-  const hasConvexUrl = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
   const [busyAction, setBusyAction] = useState<"secure" | "restore" | null>(null);
 
   const status = useIdentityStore((state) => state.status);
@@ -17,10 +16,6 @@ export function AccountActions() {
   const displayName = useIdentityStore((state) => state.displayName);
   const identityTier = useIdentityStore((state) => state.identityTier);
   const setIdentity = useIdentityStore((state) => state.setIdentity);
-
-  if (!hasConvexUrl) {
-    return null;
-  }
 
   if (status === "booting") {
     return <div className="skeleton skeleton-text" style={{ width: "8rem" }} />;

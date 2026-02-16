@@ -38,25 +38,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const hasConvexUrl = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ConvexClientProvider>
-            {hasConvexUrl ? (
-              <IdentityProvider>
-                <NavBar />
-                {children}
-                <Footer />
-              </IdentityProvider>
-            ) : (
-              <>
-                <NavBar />
-                {children}
-                <Footer />
-              </>
-            )}
+            <IdentityProvider>
+              <NavBar />
+              {children}
+              <Footer />
+            </IdentityProvider>
           </ConvexClientProvider>
           <Toaster
             position="top-center"
