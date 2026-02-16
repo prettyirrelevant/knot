@@ -3,9 +3,9 @@ import { Fraunces, Manrope } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "./convex-client-provider";
-import { IdentityProvider } from "./identity-provider";
-import { Footer } from "./footer";
-import { NavBar } from "./nav-bar";
+import { IdentityProvider } from "@/components/identity-provider";
+import { Footer } from "@/components/footer";
+import { NavBar } from "@/components/nav-bar";
 import "./globals.css";
 
 const display = Fraunces({

@@ -1,14 +1,20 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
-import { Check, Clock, Copy, Frown, Grid3X3, Hash, Hourglass, Scale, TrendingDown, TrendingUp, Trophy, Users } from "lucide-react";
+import { Clock, Grid3X3, Hash, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { MatchActions } from "@/app/g/[code]/match-actions";
+import { MatchBoard } from "@/app/g/[code]/match-board";
+import { MatchShareStrip } from "@/app/g/[code]/match-share-strip";
+import { MatchStatusCard } from "@/app/g/[code]/match-status-card";
+import { useMatchClock } from "@/app/g/[code]/use-match-clock";
 import { AccountActions } from "@/app/account-actions";
+import { api } from "@/convex/_generated/api";
+import { toPlayerId } from "@/lib/convex-helpers";
+import { formatDelta } from "@/lib/format";
 import { getSymbolSkin } from "@/lib/symbol-skins";
 import { useIdentityStore } from "@/stores/use-identity-store";
 import { useUiStore } from "@/stores/use-ui-store";
@@ -16,25 +22,12 @@ import { useUiStore } from "@/stores/use-ui-store";
 const MATCH_QUERY = api.matches.getMatchByRoomCode;
 const JOIN_ROOM = api.matches.joinRoom;
 const MAKE_MOVE = api.matches.makeMove;
-const TICK_TIMEOUT = api.matches.tickTimeout;
 const REQUEST_REMATCH = api.matches.requestRematch;
 const ACCEPT_REMATCH = api.matches.acceptRematch;
 const ROUND_RATING_EVENTS = api.ratings.getRoundRatingEvents;
 
 function isTerminalStatus(status: string) {
   return status === "won" || status === "draw" || status === "timeout" || status === "resigned";
-}
-
-function formatDelta(delta?: number) {
-  if (typeof delta !== "number") {
-    return "-";
-  }
-
-  return delta >= 0 ? `+${delta}` : `${delta}`;
-}
-
-function toPlayerId(value: string | null): Id<"players"> | null {
-  return value ? (value as Id<"players">) : null;
 }
 
 function RulesGroup({
@@ -71,12 +64,9 @@ function RulesGroup({
 
 export function RealtimeMatch({ roomCode }: { roomCode: string }) {
   const [feedback, setFeedback] = useState("");
-  const [clockMs, setClockMs] = useState(() => Date.now());
   const [joining, setJoining] = useState(false);
-  const [tickingTimeout, setTickingTimeout] = useState(false);
   const [requestingRematch, setRequestingRematch] = useState(false);
   const [acceptingRematch, setAcceptingRematch] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const localSymbolSkinId = useUiStore((state) => state.symbolSkinId);
   const identityStatus = useIdentityStore((state) => state.status);
@@ -86,7 +76,6 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
 
   const joinRoom = useMutation(JOIN_ROOM);
   const makeMove = useMutation(MAKE_MOVE);
-  const tickTimeout = useMutation(TICK_TIMEOUT);
   const requestRematch = useMutation(REQUEST_REMATCH);
   const acceptRematch = useMutation(ACCEPT_REMATCH);
 
@@ -106,36 +95,19 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
 
   const roundRating = useQuery(ROUND_RATING_EVENTS, terminalRoundArgs);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setClockMs(Date.now());
-    }, 250);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, []);
+  const { turnRemainingSec, timerRatio } = useMatchClock(
+    match ? { _id: match._id, status: String(match.status), turnDeadlineAt: Number(match.turnDeadlineAt), config: { turnTimeSec: Number(match.config.turnTimeSec) } } : null,
+  );
 
   const playerSymbol = useMemo(() => {
-    if (!playerId || !match) {
-      return null;
-    }
-
-    if (match.players?.X && String(match.players.X) === playerId) {
-      return "X" as const;
-    }
-
-    if (match.players?.O && String(match.players.O) === playerId) {
-      return "O" as const;
-    }
-
+    if (!playerId || !match) return null;
+    if (match.players?.X && String(match.players.X) === playerId) return "X" as const;
+    if (match.players?.O && String(match.players.O) === playerId) return "O" as const;
     return null;
   }, [match, playerId]);
 
   useEffect(() => {
-    if (!match || !playerId) {
-      return;
-    }
+    if (!match || !playerId) return;
 
     const status = String(match.status);
 
@@ -157,67 +129,10 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
     setFeedback("Room's open. Jump in.");
   }, [match, playerId, playerSymbol]);
 
-  useEffect(() => {
-    if (!match || match.status !== "active") {
-      return;
-    }
-
-    if (clockMs <= Number(match.turnDeadlineAt)) {
-      return;
-    }
-
-    if (tickingTimeout) {
-      return;
-    }
-
-    let cancelled = false;
-
-    setTickingTimeout(true);
-    void tickTimeout({ matchId: match._id })
-      .catch(() => {
-        if (!cancelled) {
-          toast.error("Something went wrong with the timer.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setTickingTimeout(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [clockMs, match, tickTimeout, tickingTimeout]);
-
-  const turnRemainingSec = match
-    ? Math.max(0, Math.ceil((Number(match.turnDeadlineAt) - clockMs) / 1000))
-    : 0;
-
-  const timerRatio = match
-    ? Math.max(
-        0,
-        Math.min(
-          1,
-          (Number(match.turnDeadlineAt) - clockMs) / (Number(match.config.turnTimeSec) * 1000),
-        ),
-      )
-    : 0;
-
   const winningLineSet = useMemo(
     () => new Set<number>((match?.winningLine as number[] | undefined) ?? []),
     [match?.winningLine],
   );
-
-  async function handleCopyLink() {
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/g/${roomCode}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
 
   async function handleJoinRoom() {
     if (!playerId) {
@@ -237,44 +152,28 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
   }
 
   async function handleMove(cellIndex: number) {
-    if (!match || !playerId || !playerSymbol) {
-      return;
-    }
-
-    if (match.status !== "active") {
-      return;
-    }
+    if (!match || !playerId || !playerSymbol) return;
+    if (match.status !== "active") return;
 
     if (match.nextPlayer !== playerSymbol) {
       toast.error("Not your turn.");
       return;
     }
 
-    if ((match.board as Array<string | null>)[cellIndex] !== null) {
-      return;
-    }
+    if ((match.board as Array<string | null>)[cellIndex] !== null) return;
 
     try {
-      const result = await makeMove({
-        matchId: match._id,
-        cellIndex,
-        playerId,
-      });
-
+      const result = await makeMove({ matchId: match._id, cellIndex, playerId });
       if (!result.ok) {
         toast.error(String(result.reason).replaceAll("_", " ").toLowerCase());
-        return;
       }
-
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "That move didn't work. Try again.");
     }
   }
 
   async function handleRequestRematch() {
-    if (!match || !playerId) {
-      return;
-    }
+    if (!match || !playerId) return;
 
     setRequestingRematch(true);
     try {
@@ -292,9 +191,7 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
   }
 
   async function handleAcceptRematch() {
-    if (!match || !playerId) {
-      return;
-    }
+    if (!match || !playerId) return;
 
     setAcceptingRematch(true);
     try {
@@ -357,190 +254,68 @@ export function RealtimeMatch({ roomCode }: { roomCode: string }) {
   const canJoin = !playerSymbol && !match.players?.O;
   const canPlay = Boolean(playerSymbol) && status === "active";
   const canRequestRematch = Boolean(playerSymbol) && isTerminal && !requestedBy && !isArchived;
-  const canAcceptRematch = Boolean(playerSymbol) && isTerminal && requestedBy && requestedBy !== playerSymbol && !isArchived;
+  const canAcceptRematch = Boolean(playerSymbol) && isTerminal && Boolean(requestedBy) && requestedBy !== playerSymbol && !isArchived;
   const waitingForRematch = Boolean(playerSymbol) && isTerminal && requestedBy === playerSymbol && !isArchived;
+
+  const nextSymbol = match.nextPlayer as "X" | "O";
+  const nextPlayerName = match.playerNames?.[nextSymbol] ?? nextSymbol;
 
   const myDelta = typeof roundRating?.myDelta === "number" ? roundRating.myDelta : undefined;
   const myAfterElo = roundRating?.events.find(
     (e) => String(e.playerId) === playerId,
   )?.afterElo;
 
-  // status card config
-  let statusCardClass = "status-card";
-  let statusIcon = <Users size={20} />;
-  let statusTitle = "";
-  let statusDesc = "";
-
-  if (status === "waiting") {
-    statusCardClass += " waiting";
-    statusIcon = <Hourglass size={20} />;
-    if (playerSymbol) {
-      statusTitle = "Waiting for opponent";
-      statusDesc = "Share the link to invite someone.";
-    } else {
-      statusTitle = "Room open";
-      statusDesc = "Join to start the match.";
-    }
-  } else if (isTerminal) {
-    if (status === "draw") {
-      statusCardClass += " draw";
-      statusIcon = <Scale size={20} />;
-      statusTitle = "Draw";
-      statusDesc = "Round ended in a draw.";
-    } else if (didWin) {
-      statusCardClass += " victory";
-      statusIcon = <Trophy size={20} />;
-      statusTitle = "Victory";
-      statusDesc = status === "timeout"
-        ? "Opponent ran out of time."
-        : status === "resigned"
-          ? "Opponent left the match."
-          : "You won this round.";
-    } else {
-      statusCardClass += " defeat";
-      statusIcon = <Frown size={20} />;
-      statusTitle = "Defeat";
-      statusDesc = status === "timeout"
-        ? "Time's up."
-        : status === "resigned"
-          ? "You left the match."
-          : "You lost this round.";
-    }
-  } else if (status === "active") {
-    const nextSymbol = match.nextPlayer as "X" | "O";
-    const nextName = match.playerNames?.[nextSymbol] ?? nextSymbol;
-    if (playerSymbol) {
-      if (isMyTurn) {
-        statusCardClass += " your-turn";
-        statusTitle = "Your turn";
-        statusDesc = `${turnRemainingSec}s remaining`;
-      } else {
-        statusCardClass += " their-turn";
-        statusTitle = `${nextName}'s turn`;
-        statusDesc = `${turnRemainingSec}s remaining`;
-      }
-    } else {
-      statusCardClass += " their-turn";
-      statusTitle = `${nextName}'s turn`;
-      statusDesc = `${turnRemainingSec}s remaining`;
-    }
-  }
-
   return (
     <>
-      <div className="match-share-strip">
-        <span className="badge filled">
-          {playerSymbol
-            ? <>Playing as {React.createElement(symbolSkin[playerSymbol], { size: 14 })}</>
-            : "Spectating"}
-        </span>
-        <span className="badge muted">Round <strong>#{roundNumber}</strong></span>
-        <div className="share-code">
-          <span className="share-code-label">{roomCode}</span>
-          <button
-            className="share-code-btn"
-            type="button"
-            onClick={() => void handleCopyLink()}
-            aria-label="Copy room link"
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-          </button>
-        </div>
-      </div>
+      <MatchShareStrip
+        roomCode={roomCode}
+        roundNumber={roundNumber}
+        playerSymbol={playerSymbol}
+        symbolSkin={symbolSkin}
+      />
 
       <div className="match-layout interactive">
-        <div className="board-area glass-panel">
-          {status === "active" && (
-            <div className="timer-strip" aria-label="Turn timer">
-              <div className="timer-fill" style={{ transform: `scaleX(${timerRatio})` }} />
-            </div>
-          )}
-
-          <div className="knot-board" style={{ gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))` }}>
-            {board.map((cell, index) => {
-              const isWinningCell = winningLineSet.has(index);
-              const isLastMove = !isTerminal && index === match.lastMoveIndex;
-              const isDisabled = !canPlay || cell !== null || match.nextPlayer !== playerSymbol;
-
-              return (
-                <button
-                  key={`cell-${index}`}
-                  type="button"
-                  className={`knot-cell${isWinningCell ? " is-winning" : isLastMove ? " is-last-move" : ""}`}
-                  onClick={() => void handleMove(index)}
-                  disabled={isDisabled}
-                  aria-label={`Cell ${index + 1}`}
-                >
-                  <span>
-                    {cell === "X" ? <symbolSkin.X /> : cell === "O" ? <symbolSkin.O /> : null}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <MatchBoard
+          board={board}
+          boardSize={boardSize}
+          status={status}
+          timerRatio={timerRatio}
+          winningLineSet={winningLineSet}
+          isTerminal={isTerminal}
+          lastMoveIndex={match.lastMoveIndex}
+          canPlay={canPlay}
+          playerSymbol={playerSymbol}
+          nextPlayer={match.nextPlayer}
+          symbolSkin={symbolSkin}
+          onMove={(i) => void handleMove(i)}
+        />
 
         <aside className="match-sidebar">
-          <div className={statusCardClass}>
-            <span className="status-card-icon">{statusIcon}</span>
-            <div>
-              <p className="status-card-title">{statusTitle}</p>
-              <p className="status-card-desc">{statusDesc}</p>
-            </div>
-          </div>
+          <MatchStatusCard
+            status={status}
+            isTerminal={isTerminal}
+            didWin={didWin}
+            isMyTurn={isMyTurn}
+            playerSymbol={playerSymbol}
+            nextPlayerName={nextPlayerName}
+            turnRemainingSec={turnRemainingSec}
+          />
 
-          {canJoin && (
-            <button
-              className="button primary match-action-btn"
-              type="button"
-              onClick={() => void handleJoinRoom()}
-              disabled={joining}
-            >
-              {joining ? "Joining..." : <>Join as <symbolSkin.O size={14} /></>}
-            </button>
-          )}
-
-          {canRequestRematch && (
-            <div className="rule-actions">
-              <button
-                className="button primary"
-                type="button"
-                onClick={() => void handleRequestRematch()}
-                disabled={requestingRematch}
-              >
-                {requestingRematch ? "Requesting..." : "Request Rematch"}
-              </button>
-              <Link className="button" href="/">Go Home</Link>
-            </div>
-          )}
-
-          {canAcceptRematch && (
-            <div className="rule-actions">
-              <button
-                className="button primary"
-                type="button"
-                onClick={() => void handleAcceptRematch()}
-                disabled={acceptingRematch}
-              >
-                {acceptingRematch ? "Accepting..." : "Accept Rematch"}
-              </button>
-              <Link className="button" href="/">Go Home</Link>
-            </div>
-          )}
-
-          {waitingForRematch && (
-            <div className="rule-actions">
-              <p className="feedback-line">Waiting for opponent to accept...</p>
-              <Link className="button" href="/">Go Home</Link>
-            </div>
-          )}
-
-          {isArchived && isTerminal && !canRequestRematch && !canAcceptRematch && !waitingForRematch && (
-            <div className="rule-actions">
-              <p className="feedback-line">This match has been archived.</p>
-              <Link className="button" href="/">Go Home</Link>
-            </div>
-          )}
+          <MatchActions
+            canJoin={canJoin}
+            canRequestRematch={canRequestRematch}
+            canAcceptRematch={canAcceptRematch}
+            waitingForRematch={waitingForRematch}
+            isArchived={isArchived}
+            isTerminal={isTerminal}
+            joining={joining}
+            requestingRematch={requestingRematch}
+            acceptingRematch={acceptingRematch}
+            symbolSkin={symbolSkin}
+            onJoin={() => void handleJoinRoom()}
+            onRequestRematch={() => void handleRequestRematch()}
+            onAcceptRematch={() => void handleAcceptRematch()}
+          />
 
           {isTerminal && myDelta !== undefined && (
             <details className="info-group">

@@ -7,24 +7,14 @@ import { toast } from "sonner";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { toPlayerId } from "@/lib/convex-helpers";
+import { relativeTime } from "@/lib/format";
 import { useIdentityStore } from "@/stores/use-identity-store";
 
 const GET_HISTORY = api.history.getPlayerHistory;
 const ARCHIVE_MATCH = api.history.archiveMatch;
 
 type ResultFilter = "all" | "win" | "loss" | "draw";
-
-function relativeTime(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
 
 function SkeletonRows() {
   return (
@@ -43,7 +33,7 @@ export function HistoryClient() {
   const status = useIdentityStore((s) => s.status);
   const archiveMatch = useMutation(ARCHIVE_MATCH);
 
-  const playerIdRef = storePlayerId ? (storePlayerId as Id<"players">) : null;
+  const playerIdRef = toPlayerId(storePlayerId);
   const history = useQuery(
     GET_HISTORY,
     playerIdRef ? { playerId: playerIdRef } : "skip",

@@ -1,4 +1,4 @@
-import { HomeActions } from "./home-actions";
+import { HomeActions } from "@/components/home-actions";
 
 export default function HomePage() {
   return (

@@ -4,114 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { Loader2 } from "lucide-react";
-import Select, { components, type OptionProps, type SingleValueProps, type StylesConfig } from "react-select";
 
+import { SkinSelect } from "@/components/skin-select";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { GAME_PRESETS, validateGameConfig } from "@/lib/engine";
-import { SYMBOL_SKINS } from "@/lib/symbol-skins";
-import type { BoardSize, GameConfig, SymbolSkin } from "@/lib/types/game";
+import type { BoardSize, GameConfig } from "@/lib/types/game";
 import { useIdentityStore } from "@/stores/use-identity-store";
 import { useUiStore } from "@/stores/use-ui-store";
-
-interface SkinOption {
-  value: string;
-  label: string;
-  skin: SymbolSkin;
-}
-
-const SKIN_OPTIONS: SkinOption[] = SYMBOL_SKINS.map((skin) => ({
-  value: skin.id,
-  label: skin.name,
-  skin,
-}));
-
-function SkinPreview({ skin, size = 14 }: { skin: SymbolSkin; size?: number }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
-      <skin.X size={size} />
-      <span style={{ color: "var(--ink-500)", fontSize: "0.75em" }}>vs</span>
-      <skin.O size={size} />
-      <span style={{ marginLeft: "0.25rem" }}>{skin.name}</span>
-    </span>
-  );
-}
-
-function SkinOptionComponent(props: OptionProps<SkinOption, false>) {
-  const { data, innerRef, innerProps, isFocused, isSelected } = props;
-  return (
-    <div
-      ref={innerRef}
-      {...innerProps}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        padding: "0.5rem 0.7rem",
-        cursor: "pointer",
-        background: isSelected
-          ? "var(--accent-soft)"
-          : isFocused
-            ? "var(--surface-solid)"
-            : "transparent",
-        color: "var(--ink-900)",
-      }}
-    >
-      <SkinPreview skin={data.skin} />
-    </div>
-  );
-}
-
-function SkinDropdownIndicator() {
-  return (
-    <div style={{ padding: "0 0.7rem 0 0", display: "flex", alignItems: "center" }}>
-      <svg width="10" height="6" viewBox="0 0 10 6" fill="#666">
-        <path d="M0 0l5 6 5-6z" />
-      </svg>
-    </div>
-  );
-}
-
-function SkinSingleValue(props: SingleValueProps<SkinOption, false>) {
-  return (
-    <components.SingleValue {...props}>
-      <SkinPreview skin={props.data.skin} />
-    </components.SingleValue>
-  );
-}
-
-const skinSelectStyles: StylesConfig<SkinOption, false> = {
-  control: (base, state) => ({
-    ...base,
-    border: `1px solid ${state.isFocused ? "var(--accent)" : "var(--line)"}`,
-    borderRadius: "12px",
-    background: "var(--surface-solid)",
-    boxShadow: state.isFocused ? "0 0 0 3px var(--accent-soft)" : "none",
-    cursor: "pointer",
-    minHeight: "unset",
-    padding: "0.1rem 0",
-    fontSize: "0.88rem",
-    fontFamily: "inherit",
-    "&:hover": { borderColor: "var(--border-strong)" },
-  }),
-  menu: (base) => ({
-    ...base,
-    borderRadius: "12px",
-    border: "1px solid var(--line)",
-    boxShadow: "var(--shadow-sm)",
-    overflow: "hidden",
-    background: "var(--paper-bright)",
-    zIndex: 10,
-  }),
-  menuList: (base) => ({
-    ...base,
-    padding: 0,
-  }),
-  indicatorSeparator: () => ({ display: "none" }),
-  valueContainer: (base) => ({
-    ...base,
-    padding: "0.3rem 0.7rem",
-  }),
-};
 
 const BOARD_SIZES: readonly BoardSize[] = [3, 4, 5, 6, 7, 8, 9, 10];
 const TIMER_OPTIONS = [15, 30, 45, 60];
@@ -288,15 +188,7 @@ export function CreateRoomModal({ open, onClose }: { open: boolean; onClose: () 
           </label>
           <label>
             Symbols
-            <Select<SkinOption, false>
-              options={SKIN_OPTIONS}
-              value={SKIN_OPTIONS.find((o) => o.value === symbolSkinId)}
-              onChange={(option) => option && setSymbolSkinId(option.value)}
-              components={{ Option: SkinOptionComponent, SingleValue: SkinSingleValue, DropdownIndicator: SkinDropdownIndicator }}
-              styles={skinSelectStyles}
-              isSearchable={false}
-              menuPlacement="auto"
-            />
+            <SkinSelect value={symbolSkinId} onChange={setSymbolSkinId} />
           </label>
         </div>
 
